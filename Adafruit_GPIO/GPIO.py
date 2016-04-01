@@ -24,6 +24,7 @@ import Adafruit_GPIO.Platform as Platform
 
 OUT     = 0
 IN      = 1
+SPI     = 2
 HIGH    = True
 LOW     = False
 
@@ -158,8 +159,9 @@ class BaseGPIO(object):
 class PCDuino3GPIOAdapter(BaseGPIO):
     """GPIO implementation for the PCDuino3."""
     def __init__(self):
-        self._dir_mapping = { OUT:      "0",
-                              IN:       "1" }
+        self._mode_mapping = { OUT:      "0",
+                               IN:       "1",
+                               SPI:      "2" }
         self._pud_mapping = { PUD_OFF:  "1",
                               PUD_UP:   "8" }
         self._pin_path = os.path.normpath('/sys/devices/virtual/misc/gpio/pin/gpio%d')
@@ -167,11 +169,11 @@ class PCDuino3GPIOAdapter(BaseGPIO):
 
     def setup(self, pin, mode, pull_up_down=PUD_OFF):
         """Set the input or output mode for a specified pin.  Mode should be
-        either OUT or IN.
+        either OUT, IN or SPI. 
         """
         with open(self._mode_path % pin, 'r+') as p:
             if pull_up_down == PUD_OFF:
-                p.write(self._dir_mapping[mode])
+                p.write(self._mode_mapping[mode])
             else:
                 p.write(self._pud_mapping[pull_up_down])
 
@@ -182,6 +184,12 @@ class PCDuino3GPIOAdapter(BaseGPIO):
         with open(self._pin_path % pin, 'r+') as p:
             p.write("1" if value else "0")
 
+    def input(self, pin):
+        """Read the specified pin and return HIGH/true if the pin is pulled high,
+        or LOW/false if pulled low.
+        """
+        with open(self._pin_path % pin, 'r') as p:
+            return (p.read(1) == '1')
 
 class RPiGPIOAdapter(BaseGPIO):
     """GPIO implementation for the Raspberry Pi using the RPi.GPIO library."""
