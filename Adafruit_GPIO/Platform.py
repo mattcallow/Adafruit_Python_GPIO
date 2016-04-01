@@ -26,6 +26,7 @@ UNKNOWN          = 0
 RASPBERRY_PI     = 1
 BEAGLEBONE_BLACK = 2
 MINNOWBOARD      = 3
+PCDUINO3         = 4
 
 def platform_detect():
     """Detect if running on the Raspberry Pi or Beaglebone Black and return the
@@ -55,6 +56,7 @@ def platform_detect():
     except ImportError:
         pass
     
+    # TODO - check for PCDUINO3
     # Couldn't figure out the platform, just return unknown.
     return UNKNOWN
 
@@ -104,3 +106,5 @@ def pi_version():
     else:
         # Something else, not a pi.
         return None
+
+# vim: ts=4 sw=4 expandtab

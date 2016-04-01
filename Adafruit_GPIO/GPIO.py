@@ -155,6 +155,34 @@ class BaseGPIO(object):
         return (src | bit) if val else (src & ~bit)
 
 
+class PCDuino3GPIOAdapter(BaseGPIO):
+    """GPIO implementation for the PCDuino3."""
+    def __init__(self):
+        self._dir_mapping = { OUT:      "0",
+                              IN:       "1" }
+        self._pud_mapping = { PUD_OFF:  "1",
+                              PUD_UP:   "8" }
+        self._pin_path = os.path.normpath('/sys/devices/virtual/misc/gpio/pin/gpio%d')
+        self._mode_path = os.path.normpath('/sys/devices/virtual/misc/gpio/mode/gpio%d')
+
+    def setup(self, pin, mode, pull_up_down=PUD_OFF):
+        """Set the input or output mode for a specified pin.  Mode should be
+        either OUT or IN.
+        """
+        with open(self._mode_path % pin, 'r+') as p:
+            if pull_up_down == PUD_OFF:
+                p.write(self._dir_mapping[mode])
+            else:
+                p.write(self._pud_mapping[pull_up_down])
+
+    def output(self, pin, value):
+        """Set the specified pin the provided high/low value.  Value should be
+        either HIGH/LOW or a boolean (true = high).
+        """
+        with open(self._pin_path % pin, 'r+') as p:
+            p.write("1" if value else "0")
+
+
 class RPiGPIOAdapter(BaseGPIO):
     """GPIO implementation for the Raspberry Pi using the RPi.GPIO library."""
 
@@ -422,5 +450,9 @@ def get_platform_gpio(**keywords):
     elif plat == Platform.MINNOWBOARD:
         import mraa
         return AdafruitMinnowAdapter(mraa, **keywords)
+    elif plat == Platform.PCDUINO3:
+         return PCDuino3GPIOAdapter(**keywords)
     elif plat == Platform.UNKNOWN:
         raise RuntimeError('Could not determine platform.')
+
+# vim: sw=4 ts=4 expandtab
